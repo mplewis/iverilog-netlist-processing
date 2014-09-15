@@ -1,0 +1,124 @@
+from parsers import (parse_module_lines, parse_elab_bundle_lines,
+                     parse_netlist_to_sections)
+from ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
+from utils import IvlNetManager, group_lines
+
+import json
+
+
+def main():
+    net_manager = IvlNetManager()
+
+    with open('netlist') as f:
+        raw_netlist = f.read()
+
+    sections = parse_netlist_to_sections(raw_netlist)
+    modules_lines = group_lines(sections['SCOPES'])
+    elab_bundles_lines = group_lines(sections['ELABORATED NODES'])
+
+    modules = [parse_module_lines(lines, net_manager)
+               for lines in modules_lines]
+    elabs = [parse_elab_bundle_lines(lines, net_manager)
+             for lines in elab_bundles_lines]
+
+    local_nets = set()
+    for module in modules:
+        for port in module.ports:
+            if port.is_local:
+                local_nets.add(port.net)
+
+    unmatched_local_ins = {}
+    unmatched_local_outs = {}
+
+    nps_elabs = [e for e in elabs if e.xtype is IvlElabType.net_part_select]
+    for e in nps_elabs:
+        if e.net_in in local_nets:
+            unmatched_local_ins[e.net_in] = e
+        elif e.net_out in local_nets:
+            unmatched_local_outs[e.net_out] = e
+
+    logic_elabs = [e for e in elabs if e.xtype is IvlElabType.logic]
+    for e in logic_elabs:
+        if e.net_out in unmatched_local_ins:
+            match = unmatched_local_ins[e.net_out]
+            new_out = match.net_out
+            print('OUT: %s replaced by %s' % (e.net_out.name, new_out.name))
+            e.net_out = new_out
+        for pos, net in enumerate(e.nets_in):
+            if net in unmatched_local_outs:
+                match = unmatched_local_outs[net]
+                new_in = match.net_in
+                e.nets_in[pos] = new_in
+                print('IN:  %s replaced by %s' % (net.name, new_in.name))
+
+    nodes = []
+    edges = []
+
+    for module in modules:
+        full_name = module.name
+        short_name = None
+        parent = None
+        try:
+            parent, short_name = module.name.rsplit('.', 1)
+        except ValueError:
+            short_name = full_name
+        nodes.append({'id': full_name, 'label': '%s\\n<%s>' %
+                     (short_name, module.xtype)})
+        if parent:
+            edges.append({'from': parent, 'to': full_name})
+
+    output = {'nodes': nodes, 'edges': edges}
+    print(json.dumps(output))
+
+    nodes = []
+    edges = []
+
+    all_nets = net_manager.nets.values()
+    nets = [n for n in all_nets if len(n.members) > 1]
+
+    for module in modules:
+        full_name = module.name
+        short_name = None
+        parent = None
+        try:
+            parent, short_name = module.name.rsplit('.', 1)
+        except ValueError:
+            short_name = full_name
+        nodes.append({'id': full_name, 'label': '%s\\n<%s>' %
+                     (short_name, module.xtype)})
+
+    for net in nets:
+        inputs = []
+        outputs = []
+        for member in net.members:
+            direction = None
+            if member.direction:
+                direction = member.direction
+            elif member.xtype is IvlPortType.wire:
+                direction = IvlDataDirection.input
+            elif member.xtype is IvlPortType.reg:
+                direction = IvlDataDirection.output
+
+            if direction is IvlDataDirection.input:
+                inputs.append(member)
+            elif direction is IvlDataDirection.output:
+                outputs.append(member)
+
+        for i in inputs:
+            for o in outputs:
+                label = '%s → %s' % (o.name, i.name)
+                if i.width > o.width:
+                    width = i.width
+                else:
+                    width = o.width
+                i_id = i.parent_module.name
+                o_id = o.parent_module.name
+                edges.append({'from': o_id, 'to': i_id, 'width': width,
+                              'label': label})
+
+    output = {'nodes': nodes, 'edges': edges}
+    print(json.dumps(output))
+
+
+if __name__ == '__main__':
+    main()
