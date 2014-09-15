@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <title>Network | Basic usage</title>
+
+  <script type="text/javascript" src="scripts/vis.min.js"></script>
+  <link href="styles/dist/vis.min.css" rel="stylesheet" type="text/css" />
+
+  <style type="text/css">
+    #mynetwork {
+      width: 800px;
+      height: 800px;
+      border: 1px solid lightgray;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="mynetwork"></div>
+
+<script type="text/javascript">
+  var data = JSON.parse('{"edges": [{"to": "bargraph_testbench.r.t2", "width": 1, "from": "bargraph_testbench.r.t2", "label": "q_not \u2192 t"}, {"to": "bargraph_testbench.r", "width": 1, "from": "bargraph_testbench.r.t2", "label": "q_not \u2192 tmp2"}, {"to": "bargraph_testbench.r.t1", "width": 1, "from": "bargraph_testbench.r.t0", "label": "q_not \u2192 clk"}, {"to": "bargraph_testbench.r", "width": 1, "from": "bargraph_testbench.r.t0", "label": "q_not \u2192 tmp0"}, {"to": "bargraph_testbench.r.t0", "width": 1, "from": "bargraph_testbench.r.t0", "label": "q_not \u2192 t"}, {"to": "bargraph_testbench.r.t0", "width": 1, "from": "bargraph_testbench", "label": "clk \u2192 clk"}, {"to": "bargraph_testbench.r", "width": 1, "from": "bargraph_testbench", "label": "clk \u2192 clk"}, {"to": "bargraph_testbench.r", "width": 1, "from": "bargraph_testbench.r.t1", "label": "q_not \u2192 tmp1"}, {"to": "bargraph_testbench.r.t2", "width": 1, "from": "bargraph_testbench.r.t1", "label": "q_not \u2192 clk"}, {"to": "bargraph_testbench.r.t1", "width": 1, "from": "bargraph_testbench.r.t1", "label": "q_not \u2192 t"}, {"to": "bargraph_testbench", "width": 3, "from": "bargraph_testbench.r", "label": "out \u2192 to_bg"}, {"to": "bargraph_testbench.b", "width": 3, "from": "bargraph_testbench.r", "label": "out \u2192 in"}, {"to": "bargraph_testbench", "width": 3, "from": "bargraph_testbench.b", "label": "out \u2192 out"}], "nodes": [{"id": "bargraph_testbench", "label": "bargraph_testbench\\n<bargraph_testbench>"}, {"id": "bargraph_testbench.b", "label": "b\\n<bargraph3>"}, {"id": "bargraph_testbench.r", "label": "r\\n<ripple3>"}, {"id": "bargraph_testbench.r.t2", "label": "t2\\n<tff>"}, {"id": "bargraph_testbench.r.t1", "label": "t1\\n<tff>"}, {"id": "bargraph_testbench.r.t0", "label": "t0\\n<tff>"}]}');
+
+  var container = document.getElementById('mynetwork');
+  var options = {
+    smoothCurves: true,
+    edges: {
+      style: 'arrow'
+    },
+    physics: {
+      barnesHut: {
+        enabled: true,
+        gravitationalConstant: -2000,
+        centralGravity: 0.1,
+        springLength: 400,
+        springConstant: 0.04,
+        damping: 0.09
+      },
+      repulsion: {
+        centralGravity: 0.1,
+        springLength: 50,
+        springConstant: 0.05,
+        nodeDistance: 100,
+        damping: 0.09
+      }
+    }
+  };
+  var network = new vis.Network(container, data, options);
+</script>
+
+</body>
+</html>

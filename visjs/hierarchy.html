@@ -1,0 +1,52 @@
+
+<!doctype html>
+<html>
+<head>
+  <title>Network | Random nodes</title>
+
+  <style type="text/css">
+    body {
+      font: 10pt sans;
+    }
+    #mynetwork {
+      width: 600px;
+      height: 600px;
+      border: 1px solid lightgray;
+    }
+  </style>
+
+  <script type="text/javascript" src="scripts/vis.min.js"></script>
+  <link href="styles/vis.min.css" rel="stylesheet" type="text/css" />
+
+  <script type="text/javascript">
+    function draw() {
+      var connectionCount = [];
+
+      data = JSON.parse('{"edges": [{"to": "bargraph_testbench.b", "from": "bargraph_testbench"}, {"to": "bargraph_testbench.r", "from": "bargraph_testbench"}, {"to": "bargraph_testbench.r.t2", "from": "bargraph_testbench.r"}, {"to": "bargraph_testbench.r.t1", "from": "bargraph_testbench.r"}, {"to": "bargraph_testbench.r.t0", "from": "bargraph_testbench.r"}], "nodes": [{"id": "bargraph_testbench", "label": "bargraph_testbench\\n<bargraph_testbench>"}, {"id": "bargraph_testbench.b", "label": "b\\n<bargraph3>"}, {"id": "bargraph_testbench.r", "label": "r\\n<ripple3>"}, {"id": "bargraph_testbench.r.t2", "label": "t2\\n<tff>"}, {"id": "bargraph_testbench.r.t1", "label": "t1\\n<tff>"}, {"id": "bargraph_testbench.r.t0", "label": "t0\\n<tff>"}]}');
+
+      // create a network
+      var container = document.getElementById('mynetwork');
+      var directionInput = document.getElementById("direction");
+      var options = {
+        stabilize: false,
+        smoothCurves: false,
+        hierarchicalLayout: {
+          layout: 'direction'
+        },
+        edges: {
+          style: 'arrow'
+        }
+      };
+      var network = new vis.Network(container, data, options);
+    }
+
+  </script>
+</head>
+
+<body onload="draw();">
+<h1>Verilog Hierarchy</h1>
+
+<div id="mynetwork"></div>
+
+</body>
+</html>
