@@ -1,25 +1,15 @@
-from parsers import (parse_module_lines, parse_elab_bundle_lines,
-                     parse_netlist_to_sections)
+from parsers import parse_modules_and_elabs
 from ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
-from utils import IvlNetManager, group_lines
+from utils import IvlNetManager
 
 import json
 
 
 def main():
-    net_manager = IvlNetManager()
-
     with open('netlist') as f:
         raw_netlist = f.read()
-
-    sections = parse_netlist_to_sections(raw_netlist)
-    modules_lines = group_lines(sections['SCOPES'])
-    elab_bundles_lines = group_lines(sections['ELABORATED NODES'])
-
-    modules = [parse_module_lines(lines, net_manager)
-               for lines in modules_lines]
-    elabs = [parse_elab_bundle_lines(lines, net_manager)
-             for lines in elab_bundles_lines]
+    net_manager = IvlNetManager()
+    modules, elabs = parse_modules_and_elabs(raw_netlist, net_manager)
 
     local_nets = set()
     for module in modules:

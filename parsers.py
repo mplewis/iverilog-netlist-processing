@@ -1,7 +1,7 @@
 from ivl_structures import IvlModule, IvlPort
 from ivl_elabs import IvlElabNetPartSelect, IvlElabPosedge, IvlElabLogic
 from ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
-from utils import leading_spaces, is_local_finder
+from utils import leading_spaces, is_local_finder, group_lines
 
 import re
 
@@ -135,3 +135,15 @@ def parse_elab_bundle_lines(lines, net_manager):
     else:
         raise ValueError('Invalid elab xtype: %s' % xtype)
     return elab
+
+
+def parse_modules_and_elabs(raw_netlist, net_manager):
+    sections = parse_netlist_to_sections(raw_netlist)
+    modules_lines = group_lines(sections['SCOPES'])
+    elab_bundles_lines = group_lines(sections['ELABORATED NODES'])
+
+    modules = [parse_module_lines(lines, net_manager)
+               for lines in modules_lines]
+    elabs = [parse_elab_bundle_lines(lines, net_manager)
+             for lines in elab_bundles_lines]
+    return modules, elabs
