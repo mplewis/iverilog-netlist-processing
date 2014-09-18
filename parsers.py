@@ -5,6 +5,7 @@ from utils import leading_spaces, is_local_finder, group_lines
 
 import re
 
+# Used to lookup enum types from strings
 ELAB_TYPE_LOOKUP = {
     'NetPartSelect': IvlElabType.net_part_select,
     'posedge': IvlElabType.posedge,
