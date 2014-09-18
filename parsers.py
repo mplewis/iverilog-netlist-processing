@@ -13,6 +13,19 @@ ELAB_TYPE_LOOKUP = {
 
 
 def parse_netlist_to_sections(raw_netlist):
+    """
+    Take raw text from a netlist file and turn it into lists of lines grouped
+    by section.
+
+    Sections look like this:
+        SCOPES:
+        ELABORATED NODES:
+        ...etc.
+
+    Returns a dict.
+    Keys are the name of the section.
+    Values are an array of lines that make up that section.
+    """
     section_regex = '[A-Z][A-Z ]*:.*'
     section_finder = re.compile(section_regex)
     sections = {}
@@ -36,6 +49,12 @@ def parse_netlist_to_sections(raw_netlist):
 
 
 def parse_module_lines(lines, net_manager):
+    """
+    Parse lines that make up a module. Add the module to the proper nets using
+    the specified NetManager.
+
+    Returns an IvlModule object.
+    """
     module_meta = lines[0]
     module_data = lines[1:]
     name, supertype, module_type_raw, inst_type = module_meta.split(' ')
@@ -48,6 +67,11 @@ def parse_module_lines(lines, net_manager):
 
 
 def parse_module_data(lines, net_manager):
+    """
+    Parse the module data (not the first line, which is metadata).
+
+    Returns a list of IvlPort objects created from the module.
+    """
     ports = []
     port = None
     skip = True
@@ -96,6 +120,12 @@ def parse_module_data(lines, net_manager):
 
 
 def parse_elab_bundle_lines(lines, net_manager):
+    """
+    Parses lines from an elab into a Logic, Posedge, or NetPartSelect IvlElab
+    object.
+
+    Returns the new IvlElab object.
+    """
     xtype_raw = lines[0].split(' -> ')[0].split('(')[0].split(':')[0]
     xtype = ELAB_TYPE_LOOKUP[xtype_raw]
     info_split = lines[0].split(' ')
@@ -138,6 +168,13 @@ def parse_elab_bundle_lines(lines, net_manager):
 
 
 def parse_modules_and_elabs(raw_netlist, net_manager):
+    """
+    Parses a raw netlist into its IvlModule and IvlElab objects.
+
+    Returns a tuple: (modules, elabs)
+    modules is a list of IvlModule objects.
+    elabs is a list of IvlElab objects.
+    """
     sections = parse_netlist_to_sections(raw_netlist)
     modules_lines = group_lines(sections['SCOPES'])
     elab_bundles_lines = group_lines(sections['ELABORATED NODES'])
