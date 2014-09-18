@@ -28,8 +28,8 @@ def test_counts(read_netlist):
 
 
 def test_types(read_netlist):
-    modules, elabs, net_manager = read_netlist
     """Make sure the right types appear."""
+    modules, elabs, net_manager = read_netlist
     len([m for m in modules if m.xtype == 'tff']).should.be.equal(3)
     net_part_selects = [e for e in elabs if
                         e.xtype is IvlElabType.net_part_select]
