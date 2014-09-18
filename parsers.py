@@ -27,6 +27,8 @@ def parse_netlist_to_sections(raw_netlist):
     Keys are the name of the section.
     Values are an array of lines that make up that section.
     """
+    # This regex matches lines that start with a caps letter, contain caps and
+    # spaces, and are followed by a colon, then any characters
     section_regex = '[A-Z][A-Z ]*:.*'
     section_finder = re.compile(section_regex)
     sections = {}
@@ -75,46 +77,66 @@ def parse_module_data(lines, net_manager):
     """
     ports = []
     port = None
-    skip = True
     for line in lines:
+        # Port declarations have four leading spaces
         if leading_spaces(line) == 4:
-            if not skip:
+            if port:
                 ports.append(port)
                 port = None
-            else:
-                skip = False
             line = line.lstrip(' ')
+
+            # reg or wire lines
             if line.startswith('reg') or line.startswith('wire'):
                 is_local = is_local_finder.search(line)
+
+                # Line starts with either 'reg' or 'wire'
                 if line.startswith('reg'):
                     xtype = IvlPortType.reg
                 else:
                     xtype = IvlPortType.wire
+
+                # reg: <name>[0:0 count=1]
+                # wire: <name>[0:0 count=1]
                 name = line.split(': ')[1].split('[')[0]
+
+                # wire: in[0:0 count=1] logic <direction_raw> (eref=0, lref=0)
                 direction_raw = (line
                                  .split('logic')[1]
                                  .split('(eref')[0]
                                  .strip(' '))
+
+                # Convert direction_raw to an IvlDataDirection
                 try:
                     direction = IvlDataDirection[direction_raw]
                 except KeyError:
                     direction = None
+
+                # vector_width=<width>
                 width = int(line
                             .split('vector_width=')[1]
                             .split(' pin_count=')[0])
+
                 port = IvlPort(name, xtype, width=width, direction=direction,
                                is_local=is_local)
+
+            # event lines
             elif line.startswith('event'):
                 xtype = IvlPortType.event
+
+                # event <name>;
                 name = line.split('event ')[1].split(';')[0]
+
+                # event _s0; ... // <snippet>
                 snippet = line.split('// ')[1]
+
                 port = IvlPort(name, xtype, code_snippet=snippet)
-            else:
-                skip = True
+
+        # Port data lines have eight leading spaces
         elif leading_spaces(line) == 8:
             if port:
                 net_id, net_name = line.split(': ')[1].split(' ')
                 net_manager.add_port_to_net(net_id, net_name, port)
+
     if port:
         ports.append(port)
     return ports
@@ -127,24 +149,38 @@ def parse_elab_bundle_lines(lines, net_manager):
 
     Returns the new IvlElab object.
     """
+    # posedge -> ...
+    # NetPartSelect(PV): ...
+    # logic: ...
     xtype_raw = lines[0].split(' -> ')[0].split('(')[0].split(':')[0]
     xtype = ELAB_TYPE_LOOKUP[xtype_raw]
     info_split = lines[0].split(' ')
+
     if xtype is IvlElabType.net_part_select:
-        io_size_flag = lines[0].split('(')[1].split(')')[0]
+        # NetPartSelect(<io_size_flag>): <name> #(.,.,.) \
+        # off=<offset> wid=<width>
+
         offset = int(info_split[3][4:])
         width = int(info_split[4][4:])
+
+        # PV vs VP indicates which port is larger, the first or second
+        io_size_flag = lines[0].split('(')[1].split(')')[0]
         if io_size_flag == 'PV':
             large_net = IvlDataDirection.output
         elif io_size_flag == 'VP':
             large_net = IvlDataDirection.input
         else:
             raise ValueError('Invalid IO size flag: %s' % io_size_flag)
+
     elif xtype is IvlElabType.logic:
+        # logic: <logic_type> ...
         logic_type = info_split[1]
+
     input_nets = []
     output_nets = []
     for line in lines[1:]:
+        # Net lines have four leading spaces. Example line:
+        # 0 pin0 I (strong0 strong1): 0x7fbd08d0a630 bargraph_testbench.b._s0
         line_split = line.split(' ')
         data_dir = line_split[6]
         net_id = line_split[9]
@@ -156,15 +192,20 @@ def parse_elab_bundle_lines(lines, net_manager):
             output_nets.append(net)
         else:
             raise ValueError('Invalid net data direction: %s' % data_dir)
+
     if xtype is IvlElabType.net_part_select:
         elab = IvlElabNetPartSelect(input_nets[0], output_nets[0], large_net,
                                     offset, width)
+
     elif xtype is IvlElabType.posedge:
         elab = IvlElabPosedge(input_nets[0])
+
     elif xtype is IvlElabType.logic:
         elab = IvlElabLogic(logic_type, input_nets, output_nets[0])
+
     else:
         raise ValueError('Invalid elab xtype: %s' % xtype)
+
     return elab
 
 
