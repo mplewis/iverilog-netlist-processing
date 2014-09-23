@@ -1,4 +1,4 @@
-from ivl_structures import IvlNet
+from .ivl_structures import IvlNet
 
 import re
 

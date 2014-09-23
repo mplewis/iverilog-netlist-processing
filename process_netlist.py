@@ -1,6 +1,6 @@
-from parsers import parse_modules_and_elabs
-from ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
-from utils import IvlNetManager
+from .parsers import parse_modules_and_elabs
+from .ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
+from .utils import IvlNetManager
 
 import json
 

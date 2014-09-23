@@ -1,4 +1,4 @@
-from ivl_enums import IvlElabType, IvlDataDirection
+from .ivl_enums import IvlElabType, IvlDataDirection
 
 
 class IvlElab:

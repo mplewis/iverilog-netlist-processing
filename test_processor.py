@@ -1,6 +1,6 @@
-from ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
-from parsers import parse_modules_and_elabs
-from utils import IvlNetManager
+from .ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
+from .parsers import parse_modules_and_elabs
+from .utils import IvlNetManager
 
 import pytest
 import sure  # noqa

@@ -1,7 +1,7 @@
-from ivl_structures import IvlModule, IvlPort
-from ivl_elabs import IvlElabNetPartSelect, IvlElabPosedge, IvlElabLogic
-from ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
-from utils import leading_spaces, is_local_finder, group_lines
+from .ivl_structures import IvlModule, IvlPort
+from .ivl_elabs import IvlElabNetPartSelect, IvlElabPosedge, IvlElabLogic
+from .ivl_enums import IvlElabType, IvlPortType, IvlDataDirection
+from .utils import leading_spaces, is_local_finder, group_lines
 
 import re
 
