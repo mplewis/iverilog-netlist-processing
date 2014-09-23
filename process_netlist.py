@@ -5,9 +5,7 @@ from .utils import IvlNetManager
 import json
 
 
-def main():
-    with open('netlist') as f:
-        raw_netlist = f.read()
+def netlist_to_json(raw_netlist):
     net_manager = IvlNetManager()
     modules, elabs = parse_modules_and_elabs(raw_netlist, net_manager)
 
@@ -32,14 +30,12 @@ def main():
         if e.net_out in unmatched_local_ins:
             match = unmatched_local_ins[e.net_out]
             new_out = match.net_out
-            print('OUT: %s replaced by %s' % (e.net_out.name, new_out.name))
             e.net_out = new_out
         for pos, net in enumerate(e.nets_in):
             if net in unmatched_local_outs:
                 match = unmatched_local_outs[net]
                 new_in = match.net_in
                 e.nets_in[pos] = new_in
-                print('IN:  %s replaced by %s' % (net.name, new_in.name))
 
     nodes = []
     edges = []
@@ -58,7 +54,6 @@ def main():
             edges.append({'from': parent, 'to': full_name})
 
     output = {'nodes': nodes, 'edges': edges}
-    print(json.dumps(output))
 
     nodes = []
     edges = []
@@ -107,8 +102,10 @@ def main():
                               'label': label})
 
     output = {'nodes': nodes, 'edges': edges}
-    print(json.dumps(output))
+    return json.dumps(output)
 
 
 if __name__ == '__main__':
-    main()
+    with open('test.netlist') as f:
+        raw_netlist = f.read()
+    print(netlist_to_json(raw_netlist))
